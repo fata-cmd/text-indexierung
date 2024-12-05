@@ -3,9 +3,9 @@
 
 int main(){
     char word[] = "Hello\0";
-    Trie<VariableSize> var{};
+    Trie<Variable> var{};
     var.insert(word); 
-    Trie<FixedSize> fix{};
+    Trie<Fixed> fix{};
     fix.insert(word); 
     Trie<HashMap> map{};
     map.insert(word);
