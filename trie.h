@@ -4,20 +4,17 @@
 #include <cassert>
 #include "immintrin.h"
 
-constexpr char null_byte = '\0';
+constexpr u_char null_byte = '\0';
 
-// fix appropriate dummy values for word-checking (i.e. check if child at nullbyte is set or not)
-// => necessary?
 // debug
-// implement VariableSize-SIMD version
 
 template <typename Derived>
 class BaseRep
 {
 protected:
-    virtual std::pair<bool, Derived *> try_find(const char c) = 0;
-    virtual std::pair<bool, Derived *> try_insert_node(const char c) = 0;
-    virtual bool try_delete_node(const char c) = 0;
+    virtual std::pair<bool, Derived *> try_find(const u_char c) = 0;
+    virtual std::pair<bool, Derived *> try_insert_node(const u_char c) = 0;
+    virtual bool try_delete_node(const u_char c) = 0;
 
     bool is_word()
     {
@@ -37,7 +34,7 @@ protected:
     BaseRep() {}
 
 public:
-    bool contains(const char *c)
+    bool contains(const u_char *c)
     {
         if (*c == null_byte)
             return is_word();
@@ -47,7 +44,7 @@ public:
         return p->contains(++c);
     }
 
-    bool delete_word(const char *c)
+    bool delete_word(const u_char *c)
     {
         if (*c == null_byte)
         {
@@ -64,7 +61,7 @@ public:
         return p->delete_word(++c);
     }
 
-    bool insert_word(const char *c)
+    bool insert_word(const u_char *c)
     {
         auto [inserted, p] = try_insert_node(*c);
         if (*c == null_byte)
@@ -81,12 +78,12 @@ class Fixed : public BaseRep<Fixed>
 
 protected:
     std::vector<Fixed *> vec;
-    std::pair<bool, Fixed *> try_find(const char c) override
+    std::pair<bool, Fixed *> try_find(const u_char c) override
     {
         return {vec[c] != nullptr, vec[c]};
     }
 
-    std::pair<bool, Fixed *> try_insert_node(const char c) override
+    std::pair<bool, Fixed *> try_insert_node(const u_char c) override
     {
         if (vec[c] == nullptr)
         {
@@ -96,7 +93,7 @@ protected:
         return {false, vec[c]};
     }
 
-    bool try_delete_node(char c) override
+    bool try_delete_node(u_char c) override
     {
         if (vec[c] != nullptr)
         {
@@ -109,7 +106,7 @@ protected:
     }
 
 public:
-    Fixed() : vec(UINT8_MAX, nullptr) { vec.shrink_to_fit(); }
+    Fixed() : vec(256, nullptr) { vec.shrink_to_fit(); }
     ~Fixed()
     {
         for (auto &p : vec)
@@ -127,10 +124,10 @@ class Variable : public BaseRep<Variable>
     friend class BaseRep<Variable>;
 
 private:
-    std::vector<std::pair<char, Variable *>> vec;
+    std::vector<std::pair<u_char, Variable *>> vec;
 
 protected:
-    std::pair<bool, Variable *> try_find(const char c) override
+    std::pair<bool, Variable *> try_find(const u_char c) override
     {
         for (auto &p : vec)
         {
@@ -142,7 +139,7 @@ protected:
         return {false, nullptr};
     }
 
-    std::pair<bool, Variable *> try_insert_node(const char c) override
+    std::pair<bool, Variable *> try_insert_node(const u_char c) override
     {
         auto [found, p] = try_find(c);
         if (found)
@@ -151,7 +148,7 @@ protected:
         return {true, vec.back().second};
     }
 
-    bool try_delete_node(char c)
+    bool try_delete_node(u_char c)
     {
         for (auto &p : vec)
         {
@@ -189,9 +186,9 @@ private:
     class simd_vector
     {
     private:
-        using T = std::pair<char, VariableSIMD *>;
+        using T = std::pair<u_char, VariableSIMD *>;
         static constexpr size_t simd_width = 32;
-        std::vector<char> chars;
+        std::vector<u_char> chars;
         u_char actual_end_pos;
 
     public:
@@ -201,7 +198,7 @@ private:
             return chars.size();
         }
 
-        void emplace_back(char c, VariableSIMD *p)
+        void emplace_back(u_char c, VariableSIMD *p)
         {
             if (size() == actual_end_pos)
             {
@@ -240,7 +237,7 @@ private:
             return actual_end_pos;
         }
 
-        size_t scan_for_pos(char target)
+        size_t scan_for_pos(u_char target)
         {
             // Assuming we're scanning from the start or a specific point in the vector
             size_t s = size();
@@ -270,7 +267,7 @@ private:
             return s;
         }
 
-        std::pair<bool, VariableSIMD *> scan(char target)
+        std::pair<bool, VariableSIMD *> scan(u_char target)
         {
             size_t pos = scan_for_pos(target);
             if (pos != size())
@@ -294,12 +291,12 @@ private:
     simd_vector vec;
 
 protected:
-    std::pair<bool, VariableSIMD *> try_find(const char c) override
+    std::pair<bool, VariableSIMD *> try_find(const u_char c) override
     {
         return vec.scan(c);
     }
 
-    std::pair<bool, VariableSIMD *> try_insert_node(const char c) override
+    std::pair<bool, VariableSIMD *> try_insert_node(const u_char c) override
     {
         auto [found, p] = try_find(c);
         if (found)
@@ -308,7 +305,7 @@ protected:
         return {true, vec.back()};
     }
 
-    bool try_delete_node(const char c)
+    bool try_delete_node(const u_char c)
     {
         auto pos = vec.scan_for_pos(c);
         if (pos != vec.end())
@@ -340,22 +337,22 @@ class HashMap : public BaseRep<HashMap>
     friend class BaseRep<HashMap>;
 
 private:
-    std::unordered_map<char, HashMap *> map;
+    std::unordered_map<u_char, HashMap *> map;
 
 protected:
-    std::pair<bool, HashMap *> try_find(const char c) override
+    std::pair<bool, HashMap *> try_find(const u_char c) override
     {
         auto it = map.find(c);
         return {it != map.end(), it != map.end() ? it->second : nullptr};
     }
 
-    std::pair<bool, HashMap *> try_insert_node(const char c) override
+    std::pair<bool, HashMap *> try_insert_node(const u_char c) override
     {
         const auto [it, inserted] = map.emplace(c, c != null_byte ? new HashMap() : nullptr);
         return {inserted, it->second};
     }
 
-    bool try_delete_node(const char c) override
+    bool try_delete_node(const u_char c) override
     {
         auto it = map.find(c);
         if (it != map.end())
@@ -391,17 +388,17 @@ private:
 public:
     Trie() {}
 
-    bool contains(const char *c) const
+    bool contains(const u_char *c) const
     {
         return root->contains(c);
     }
 
-    bool delete_word(const char *c)
+    bool delete_word(const u_char *c)
     {
         return root->delete_word(c);
     }
 
-    bool insert(const char *c)
+    bool insert(const u_char *c)
     {
         return root->insert_word(c);
     }
