@@ -3,6 +3,7 @@
 #include <memory>
 #include <cassert>
 #include "immintrin.h"
+#include "util.h"
 
 constexpr u_char null_byte = '\0';
 
@@ -384,7 +385,7 @@ class Trie
 {
 private:
     std::unique_ptr<Node> root = std::make_unique<Node>();
-
+    size_t elements = 0;
 public:
     Trie() {}
 
@@ -393,13 +394,36 @@ public:
         return root->contains(c);
     }
 
+    bool contains(const std::string &s)
+    {
+        const u_char *uc = uc_str(s.c_str());
+        return contains(uc);
+    }
+
     bool delete_word(const u_char *c)
     {
         return root->delete_word(c);
     }
 
+    bool delete_word(const std::string &s)
+    {
+        const u_char *uc = uc_str(s.c_str());
+        return delete_word(uc);
+    }
+
     bool insert(const u_char *c)
     {
+        ++elements;
         return root->insert_word(c);
+    }
+
+    bool insert(const std::string &s)
+    {
+        const u_char *uc = uc_str(s.c_str());
+        return insert(uc);
+    }
+
+    size_t size() const {
+        return elements;
     }
 };

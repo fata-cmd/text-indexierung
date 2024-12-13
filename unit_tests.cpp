@@ -16,7 +16,13 @@
 #include "trie.h"
 #include "util.h"
 
-const auto strings = readAndProcessFile("/usr/share/dict/words");
+const std::string file = "/usr/share/dict/words";
+
+TEST_CASE("Read file into dict"){
+    auto dict = readFileIntoDict<Trie<VariableSIMD>>(file);
+}
+
+const auto strings = readFileIntoSet(file);
 std::vector<bool> to_be_inserted;
 
 template <typename T>
@@ -28,33 +34,31 @@ void test_trie()
     {
         if (to_be_inserted[i++])
         {
-            auto us = uc_str(s);
-            t.insert(us);
+            t.insert(s);
         }
     }
     i = 0;
     for (const auto& s : strings)
     {
-        auto us = uc_str(s);
         if (to_be_inserted[i++])
         {
-            CHECK(!t.insert(us));
-            CHECK(t.contains(us));
-            CHECK(t.delete_word(us));
-            CHECK(!t.contains(us));
-            CHECK(!t.delete_word(us));
-            CHECK(t.insert(us));
-            CHECK(t.delete_word(us));
+            CHECK(!t.insert(s));
+            CHECK(t.contains(s));
+            CHECK(t.delete_word(s));
+            CHECK(!t.contains(s));
+            CHECK(!t.delete_word(s));
+            CHECK(t.insert(s));
+            CHECK(t.delete_word(s));
         }
         else
         {
-            CHECK(!t.contains(us));
-            CHECK(t.insert(us));
-            CHECK(t.contains(us));
-            CHECK(t.delete_word(us));
-            CHECK(!t.delete_word(us));
-            CHECK(t.insert(us));
-            CHECK(t.delete_word(us));
+            CHECK(!t.contains(s));
+            CHECK(t.insert(s));
+            CHECK(t.contains(s));
+            CHECK(t.delete_word(s));
+            CHECK(!t.delete_word(s));
+            CHECK(t.insert(s));
+            CHECK(t.delete_word(s));
         }
     }
 }
