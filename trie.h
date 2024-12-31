@@ -125,16 +125,17 @@ class Variable : public BaseRep<Variable>
     friend class BaseRep<Variable>;
 
 private:
-    std::vector<std::pair<u_char, Variable *>> vec;
+    std::vector<u_char> chars;
+    std::vector<Variable *> ptrs;
 
 protected:
     std::pair<bool, Variable *> try_find(const u_char c) override
     {
-        for (auto &p : vec)
+        for (size_t i = 0; i < chars.size(); ++i)
         {
-            if (p.first == c)
+            if (chars[i] == c)
             {
-                return {true, p.second};
+                return {true, ptrs[i]};
             }
         }
         return {false, nullptr};
@@ -145,20 +146,23 @@ protected:
         auto [found, p] = try_find(c);
         if (found)
             return {false, p};
-        vec.emplace_back(c, c != null_byte ? new Variable() : nullptr);
-        return {true, vec.back().second};
+        chars.emplace_back(c);
+        ptrs.emplace_back(c != null_byte ? new Variable() : nullptr);
+        return {true, ptrs.back()};
     }
 
     bool try_delete_node(const u_char c)
     {
-        for (auto &p : vec)
+        for (size_t i = 0; i < chars.size(); ++i)
         {
-            if (p.first == c)
+            if (chars[i] == c)
             {
-                std::swap(p, vec.back());
-                if (vec.back().second != nullptr)
-                    vec.back().second->~Variable();
-                vec.pop_back();
+                std::swap(chars[i], chars.back());
+                std::swap(ptrs[i], ptrs.back());
+                if (ptrs.back() != nullptr)
+                    ptrs.back()->~Variable();
+                chars.pop_back();
+                ptrs.pop_back();
                 return true;
             }
         }
@@ -166,14 +170,14 @@ protected:
     }
 
 public:
-    Variable() : vec() {}
+    Variable() : chars(), ptrs() {}
     ~Variable()
     {
-        for (auto &p : vec)
+        for (auto &p : ptrs)
         {
-            if (p.second != nullptr)
+            if (p != nullptr)
             {
-                p.second->~Variable();
+                p->~Variable();
             }
         };
     }
