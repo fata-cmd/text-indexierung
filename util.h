@@ -1,9 +1,31 @@
 #pragma once
 #include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
+#include <random>
 #include <string>
 #include <unordered_set>
+#include <filesystem>
+#include <typeinfo>
+#ifdef __GNUG__
+#include <cxxabi.h>
+#include <memory>
+#endif
+
+template <typename T>
+std::string type_name() {
+#ifdef __GNUG__
+    int status = 0;
+    std::unique_ptr<char, void(*)(void*)> res{
+        abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status),
+        std::free
+    };
+    return (status == 0) ? res.get() : typeid(T).name();
+#else
+    return typeid(T).name(); // For MSVC or other compilers
+#endif
+}
 
 auto readFileIntoSet(const std::string &filename)
 {
@@ -18,8 +40,8 @@ auto readFileIntoSet(const std::string &filename)
     std::string word;
 
     while (file >> word)
-    {                                 
-        word += '\0';                 
+    {
+        word += '\0';
         processedWords.emplace(word);
     }
 
@@ -41,9 +63,10 @@ auto readFileIntoDict(const std::string &filename)
     std::string word;
 
     while (file >> word)
-    {                              
-        word += '\0';              
-        dict.insert(word);
+    {
+        if (word.back() != '\0')
+            word += '\0';
+        dict.insert_word(word);
     }
 
     file.close();

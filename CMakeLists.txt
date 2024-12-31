@@ -20,7 +20,7 @@ else()
     message(WARNING "AVX2 is not supported on this compiler.")
 endif()
 
-if (NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_BUILD_TYPE "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -O3 -mavx2")
 endif()
@@ -35,5 +35,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -mavx2")
 
 add_executable(main main.cpp)
 add_executable(ut unit_tests.cpp)
+add_executable(gen generate_query_file.cpp)
 
 add_test(NAME UnitTests COMMAND "ut")

@@ -34,7 +34,7 @@ void test_trie()
     {
         if (to_be_inserted[i++])
         {
-            t.insert(s);
+            t.insert_word(s);
         }
     }
     i = 0;
@@ -42,22 +42,22 @@ void test_trie()
     {
         if (to_be_inserted[i++])
         {
-            CHECK(!t.insert(s));
+            CHECK(!t.insert_word(s));
             CHECK(t.contains(s));
             CHECK(t.delete_word(s));
             CHECK(!t.contains(s));
             CHECK(!t.delete_word(s));
-            CHECK(t.insert(s));
+            CHECK(t.insert_word(s));
             CHECK(t.delete_word(s));
         }
         else
         {
             CHECK(!t.contains(s));
-            CHECK(t.insert(s));
+            CHECK(t.insert_word(s));
             CHECK(t.contains(s));
             CHECK(t.delete_word(s));
             CHECK(!t.delete_word(s));
-            CHECK(t.insert(s));
+            CHECK(t.insert_word(s));
             CHECK(t.delete_word(s));
         }
     }

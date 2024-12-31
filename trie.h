@@ -94,7 +94,7 @@ protected:
         return {false, vec[c]};
     }
 
-    bool try_delete_node(u_char c) override
+    bool try_delete_node(const u_char c) override
     {
         if (vec[c] != nullptr)
         {
@@ -149,7 +149,7 @@ protected:
         return {true, vec.back().second};
     }
 
-    bool try_delete_node(u_char c)
+    bool try_delete_node(const u_char c)
     {
         for (auto &p : vec)
         {
@@ -187,66 +187,45 @@ private:
     class simd_vector
     {
     private:
-        using T = std::pair<u_char, VariableSIMD *>;
         static constexpr size_t simd_width = 32;
         std::vector<u_char> chars;
-        u_char actual_end_pos;
 
     public:
         std::vector<VariableSIMD *> ptrs;
-        size_t size()
+
+        size_t size() const
         {
             return chars.size();
         }
 
-        void emplace_back(u_char c, VariableSIMD *p)
+        void emplace_back(const u_char c, VariableSIMD *p)
         {
-            if (size() == actual_end_pos)
-            {
-                auto new_size = size() + simd_width;
-                chars.resize(new_size, '0');
-                chars.shrink_to_fit();
-                ptrs.resize(new_size, nullptr);
-                ptrs.shrink_to_fit();
-            }
-            chars[actual_end_pos] = c;
-            ptrs[actual_end_pos++] = p;
+            chars.emplace_back(c);
+            ptrs.emplace_back(p);
         }
 
         auto back()
         {
-            return ptrs[actual_end_pos - 1];
+            return ptrs.back();
         }
 
         void pop_back()
         {
-            --actual_end_pos;
-            if (ptrs[actual_end_pos] != nullptr)
-                ptrs[actual_end_pos]->~VariableSIMD();
-            if (size() - actual_end_pos == simd_width)
-            {
-                auto new_size = size() - simd_width;
-                chars.resize(new_size);
-                chars.shrink_to_fit();
-                ptrs.resize(new_size);
-                ptrs.shrink_to_fit();
-            }
+            if (ptrs.back() != nullptr)
+                ptrs.back()->~VariableSIMD();
+            chars.pop_back();
+            ptrs.pop_back();
         }
 
-        auto end()
+        size_t scan_for_pos(const u_char target) const
         {
-            return actual_end_pos;
-        }
-
-        size_t scan_for_pos(u_char target)
-        {
-            // Assuming we're scanning from the start or a specific point in the vector
             size_t s = size();
 
-            __m256i target_vec = _mm256_set1_epi8(target); // Broadcast the target char across the 256-bit register
+            __m256i target_vec = _mm256_set1_epi8(target);
 
+            size_t i = 0;
             // Iterate over the vector in chunks of 32 elements (since AVX2 processes 32 bytes at a time)
-            for (size_t i = 0; i + simd_width <= s; i += simd_width)
+            for (; i + simd_width <= s; i += simd_width)
             {
                 // Load 32 bytes of data from the vector into the AVX2 register
                 __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(&chars[i]));
@@ -265,28 +244,33 @@ private:
                     return pos;
                 }
             }
+            for (; i < s; i++){
+                if (chars[i] == target){
+                    return i;
+                }
+            }
+
             return s;
         }
 
-        std::pair<bool, VariableSIMD *> scan(u_char target)
+        std::pair<bool, VariableSIMD *> scan(const u_char target) const
         {
             size_t pos = scan_for_pos(target);
             if (pos != size())
             {
-                return {pos < actual_end_pos, ptrs[pos]};
+                return {true, ptrs[pos]};
             }
             return {false, nullptr};
         }
 
-        void erase(size_t pos)
+        void erase(const size_t pos)
         {
-            auto back_pos = actual_end_pos - 1;
-            std::swap(chars[pos], chars[back_pos]);
-            std::swap(ptrs[pos], ptrs[back_pos]);
+            std::swap(chars[pos], chars.back());
+            std::swap(ptrs[pos], ptrs.back());
             pop_back();
         }
 
-        simd_vector() : chars(), actual_end_pos(0), ptrs() {}
+        simd_vector() : chars(), ptrs() {}
     };
 
     simd_vector vec;
@@ -309,7 +293,7 @@ protected:
     bool try_delete_node(const u_char c)
     {
         auto pos = vec.scan_for_pos(c);
-        if (pos != vec.end())
+        if (pos != vec.size())
         {
             vec.erase(pos);
             return true;
@@ -411,16 +395,16 @@ public:
         return delete_word(uc);
     }
 
-    bool insert(const u_char *c)
+    bool insert_word(const u_char *c)
     {
         ++elements;
         return root->insert_word(c);
     }
 
-    bool insert(const std::string &s)
+    bool insert_word(const std::string &s)
     {
         const u_char *uc = uc_str(s.c_str());
-        return insert(uc);
+        return insert_word(uc);
     }
 
     size_t size() const {
