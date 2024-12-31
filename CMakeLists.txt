@@ -33,8 +33,14 @@ enable_testing()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -mavx2")
 
+add_library(MallocCount malloc_count.c)
+target_include_directories(MallocCount SYSTEM PUBLIC .)
+target_link_libraries(MallocCount PUBLIC dl)
+
 add_executable(main main.cpp)
 add_executable(ut unit_tests.cpp)
 add_executable(gen generate_query_file.cpp)
+
+target_link_libraries(main PUBLIC MallocCount)
 
 add_test(NAME UnitTests COMMAND "ut")
