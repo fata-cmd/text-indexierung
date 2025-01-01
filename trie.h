@@ -8,103 +8,10 @@
 constexpr u_char null_byte = '\0';
 
 // debug
-
-template <typename Derived>
-class BaseRep
+class Fixed
 {
-protected:
-    virtual std::pair<bool, Derived *> try_find(const u_char c) = 0;
-    virtual std::pair<bool, Derived *> try_insert_node(const u_char c) = 0;
-    virtual bool try_delete_node(const u_char c) = 0;
-
-    bool is_word()
-    {
-        return try_find(null_byte).first;
-    }
-
-    void set_word()
-    {
-        try_insert_node(null_byte);
-    }
-
-    void reset_word()
-    {
-        try_delete_node(null_byte);
-    }
-
-    BaseRep() {}
-
-public:
-    bool contains(const u_char *c)
-    {
-        if (*c == null_byte)
-            return is_word();
-        const auto [found, p] = try_find(*c);
-        if (!found)
-            return false;
-        return p->contains(++c);
-    }
-
-    bool delete_word(const u_char *c)
-    {
-        if (*c == null_byte)
-        {
-            if (is_word())
-            {
-                reset_word();
-                return true;
-            }
-            return false;
-        }
-        auto [found, p] = try_find(*c);
-        if (!found)
-            return false;
-        return p->delete_word(++c);
-    }
-
-    bool insert_word(const u_char *c)
-    {
-        auto [inserted, p] = try_insert_node(*c);
-        if (*c == null_byte)
-        {
-            return inserted;
-        }
-        return p->insert_word(++c);
-    }
-};
-
-class Fixed : public BaseRep<Fixed>
-{
-    friend class BaseRep<Fixed>;
-
 protected:
     std::vector<Fixed *> vec;
-    std::pair<bool, Fixed *> try_find(const u_char c) override
-    {
-        return {vec[c] != nullptr, vec[c]};
-    }
-
-    std::pair<bool, Fixed *> try_insert_node(const u_char c) override
-    {
-        if (vec[c] == nullptr)
-        {
-            vec[c] = c != null_byte ? new Fixed() : this;
-            return {true, vec[c]};
-        }
-        return {false, vec[c]};
-    }
-
-    bool try_delete_node(const u_char c) override
-    {
-        if (vec[c] != nullptr)
-        {
-            if (vec[c] != this)
-                vec[c]->~Fixed();
-            vec[c] = nullptr;
-            return true;
-        }
-        return false;
-    }
 
 public:
     Fixed() : vec(256, nullptr) { vec.shrink_to_fit(); }
@@ -118,55 +25,83 @@ public:
             }
         };
     }
+
+    bool contains(const u_char *c) const
+    {
+        const bool found = vec[*c] != nullptr;
+        if (*c == null_byte || !found)
+            return found;
+        return vec[*c]->contains(++c);
+    }
+
+    bool delete_word(const u_char *c)
+    {
+        if (vec[*c] != nullptr)
+        {
+            if (*c == null_byte)
+            {
+                vec[*c] = nullptr;
+                return true;
+            }
+            return vec[*c]->delete_word(++c);
+        }
+        return false;
+    }
+
+    bool insert_word(const u_char *c)
+    {
+        if (vec[*c] != nullptr)
+        {
+            if (*c == null_byte)
+                return false;
+        }
+        else
+        {
+            if (*c == null_byte)
+            {
+                vec[*c] = this;
+                return true;
+            }
+            vec[*c] = new Fixed();
+        }
+        return vec[*c]->insert_word(++c);
+    }
 };
 
-class Variable : public BaseRep<Variable>
+constexpr unsigned invalid_pos = UINT32_MAX;
+
+class Variable
 {
-    friend class BaseRep<Variable>;
 
 private:
     std::vector<u_char> chars;
     std::vector<Variable *> ptrs;
 
 protected:
-    std::pair<bool, Variable *> try_find(const u_char c) override
+    unsigned find(const u_char c) const
     {
         for (size_t i = 0; i < chars.size(); ++i)
         {
             if (chars[i] == c)
-            {
-                return {true, ptrs[i]};
-            }
+                return i;
         }
-        return {false, nullptr};
+        return invalid_pos;
     }
 
-    std::pair<bool, Variable *> try_insert_node(const u_char c) override
+    void insert_node(const u_char c)
     {
-        auto [found, p] = try_find(c);
-        if (found)
-            return {false, p};
         chars.emplace_back(c);
         ptrs.emplace_back(c != null_byte ? new Variable() : nullptr);
-        return {true, ptrs.back()};
     }
 
-    bool try_delete_node(const u_char c)
+    void delete_node(const unsigned pos)
     {
-        for (size_t i = 0; i < chars.size(); ++i)
-        {
-            if (chars[i] == c)
-            {
-                std::swap(chars[i], chars.back());
-                std::swap(ptrs[i], ptrs.back());
-                if (ptrs.back() != nullptr)
-                    ptrs.back()->~Variable();
-                chars.pop_back();
-                ptrs.pop_back();
-                return true;
-            }
-        }
-        return false;
+        std::swap(chars[pos], chars.back());
+        std::swap(ptrs[pos], ptrs.back());
+        if (ptrs.back() != nullptr)
+            ptrs.back()->~Variable();
+        chars.pop_back();
+        ptrs.pop_back();
     }
 
 public:
@@ -181,11 +116,55 @@ public:
             }
         };
     }
+
+    bool contains(const u_char *c) const
+    {
+        const auto pos = find(*c);
+        const bool found = pos != invalid_pos;
+        if (*c == null_byte || !found)
+            return found;
+        return ptrs[pos]->contains(++c);
+    }
+
+    bool delete_word(const u_char *c)
+    {
+        const auto pos = find(*c);
+        if (*c == null_byte)
+        {
+            if (pos != invalid_pos)
+            {
+                delete_node(pos);
+                return true;
+            }
+            return false;
+        }
+        if (pos == invalid_pos)
+            return false;
+        return ptrs[pos]->delete_word(++c);
+    }
+
+    bool insert_word(const u_char *c)
+    {
+        auto pos = find(*c);
+        if (pos == invalid_pos)
+        {
+            insert_node(*c);
+            if (*c == null_byte)
+                return true;
+            else
+                pos = ptrs.size() - 1U;
+        }
+        else
+        {
+            if (*c == null_byte)
+                return false;
+        }
+        return ptrs[pos]->insert_word(++c);
+    }
 };
 
-class VariableSIMD : public BaseRep<VariableSIMD>
+class VariableSIMD
 {
-    friend class BaseRep<VariableSIMD>;
 
 private:
     class simd_vector
@@ -248,23 +227,15 @@ private:
                     return pos;
                 }
             }
-            for (; i < s; i++){
-                if (chars[i] == target){
+            for (; i < s; i++)
+            {
+                if (chars[i] == target)
+                {
                     return i;
                 }
             }
 
-            return s;
-        }
-
-        std::pair<bool, VariableSIMD *> scan(const u_char target) const
-        {
-            size_t pos = scan_for_pos(target);
-            if (pos != size())
-            {
-                return {true, ptrs[pos]};
-            }
-            return {false, nullptr};
+            return invalid_pos;
         }
 
         void erase(const size_t pos)
@@ -280,29 +251,14 @@ private:
     simd_vector vec;
 
 protected:
-    std::pair<bool, VariableSIMD *> try_find(const u_char c) override
+    void insert_node(const u_char c)
     {
-        return vec.scan(c);
-    }
-
-    std::pair<bool, VariableSIMD *> try_insert_node(const u_char c) override
-    {
-        auto [found, p] = try_find(c);
-        if (found)
-            return {false, p};
         vec.emplace_back(c, c != null_byte ? new VariableSIMD() : nullptr);
-        return {true, vec.back()};
     }
 
-    bool try_delete_node(const u_char c)
+    void delete_node(const unsigned pos)
     {
-        auto pos = vec.scan_for_pos(c);
-        if (pos != vec.size())
-        {
-            vec.erase(pos);
-            return true;
-        }
-        return false;
+        vec.erase(pos);
     }
 
 public:
@@ -319,43 +275,64 @@ public:
             }
         };
     }
+
+    bool contains(const u_char *c)
+    {
+        const auto pos = vec.scan_for_pos(*c);
+        const bool found = pos != invalid_pos;
+        if (*c == null_byte || !found)
+            return found;
+        return vec.ptrs[pos]->contains(++c);
+    }
+
+    bool delete_word(const u_char *c)
+    {
+        const auto pos = vec.scan_for_pos(*c);
+        if (*c == null_byte)
+        {
+            if (pos != invalid_pos)
+            {
+                delete_node(pos);
+                return true;
+            }
+            return false;
+        }
+        if (pos == invalid_pos)
+            return false;
+        return vec.ptrs[pos]->delete_word(++c);
+    }
+
+    bool insert_word(const u_char *c)
+    {
+        auto pos = vec.scan_for_pos(*c);
+        if (pos == invalid_pos)
+        {
+            insert_node(*c);
+            if (*c == null_byte)
+                return true;
+            else
+                pos = vec.size() - 1U;
+        }
+        else
+        {
+            if (*c == null_byte)
+                return false;
+        }
+        return vec.ptrs[pos]->insert_word(++c);
+    }
 };
 
-class HashMap : public BaseRep<HashMap>
+class HashMap
 {
-    friend class BaseRep<HashMap>;
 
 private:
     std::unordered_map<u_char, HashMap *> map;
 
 protected:
-    std::pair<bool, HashMap *> try_find(const u_char c) override
-    {
-        auto it = map.find(c);
-        return {it != map.end(), it != map.end() ? it->second : nullptr};
-    }
-
-    std::pair<bool, HashMap *> try_insert_node(const u_char c) override
-    {
-        const auto [it, inserted] = map.emplace(c, c != null_byte ? new HashMap() : nullptr);
-        return {inserted, it->second};
-    }
-
-    bool try_delete_node(const u_char c) override
-    {
-        auto it = map.find(c);
-        if (it != map.end())
-        {
-            if (it->second != nullptr)
-                it->second->~HashMap();
-            map.erase(it);
-            return true;
-        }
-        return false;
-    }
-
 public:
-    HashMap() : map() {}
+    HashMap() : map()
+    {
+    }
     ~HashMap()
     {
         for (auto &p : map)
@@ -366,6 +343,45 @@ public:
             }
         };
     }
+
+    bool contains(const u_char *c) const
+    {
+        auto it = map.find(*c);
+        const bool found = it != map.end();
+        if (*c == null_byte || !found)
+            return found;
+        return it->second->contains(++c);
+    }
+
+    bool delete_word(const u_char *c)
+    {
+        auto it = map.find(*c);
+        const bool found = it != map.end();
+        if (*c == null_byte)
+        {
+            if (found)
+            {
+                if (it->second != nullptr)
+                    it->second->~HashMap();
+                map.erase(it);
+                return true;
+            }
+            return false;
+        }
+        if (!found)
+            return false;
+        return it->second->delete_word(++c);
+    }
+
+    bool insert_word(const u_char *c)
+    {
+        auto [it, inserted] = map.emplace(*c, *c != null_byte ? new HashMap() : nullptr);
+        if (*c == null_byte)
+        {
+            return inserted;
+        }
+        return it->second->insert_word(++c);
+    }
 };
 
 template <class Node>
@@ -374,6 +390,7 @@ class Trie
 private:
     std::unique_ptr<Node> root = std::make_unique<Node>();
     size_t elements = 0;
+
 public:
     Trie() {}
 
@@ -401,7 +418,6 @@ public:
 
     bool insert_word(const u_char *c)
     {
-        ++elements;
         return root->insert_word(c);
     }
 
@@ -411,7 +427,8 @@ public:
         return insert_word(uc);
     }
 
-    size_t size() const {
+    size_t size() const
+    {
         return elements;
     }
 };

@@ -52,10 +52,10 @@ template <typename SDict>
 void benchmark(const std::string &inputFile, const std::string &queryFile, const std::string &resultFile)
 {
     std::cerr << "Benchmark " << type_name<SDict>() << "\n";
-    // construct
     std::chrono::_V2::steady_clock::time_point b, e;
     int64_t c_dur, q_dur;
     {
+       // construct
         b = std::chrono::steady_clock::now();
         SDict trie = readFileIntoDict<SDict>(inputFile);
         e = std::chrono::steady_clock::now();
@@ -72,7 +72,7 @@ void benchmark(const std::string &inputFile, const std::string &queryFile, const
               << " trie_construction_memory=" << malloc_count_peak()
               << " query_time=" << q_dur << "\n";
     malloc_count_reset_peak();
-    
+
     std::cerr << "Query results written to " << resultFile << "\n\n";
 }
 
@@ -83,13 +83,15 @@ int main(int argc, char **argv)
         std::cerr << "Usage: <path_to_input_file> <path_to_query_file>\n";
         return 1;
     }
-    std::string input_file = argv[1];
-    std::filesystem::path query_file = argv[2];
-    std::string result_file = "result_" + query_file.filename().string() + ".txt";
 
+    std::string input_file = argv[1];
+    std::string query_file = argv[2];
+    std::string result_file = "result_" + query_file;
+
+    // benchmark<Trie<Fixed>>(input_file, query_file, result_file);
+    // benchmark<Trie<Variable>>(input_file, query_file, result_file);
+    // benchmark<Trie<HashMap>>(input_file, query_file, result_file);
     benchmark<Trie<VariableSIMD>>(input_file, query_file, result_file);
-    benchmark<Trie<Variable>>(input_file, query_file, result_file);
-    benchmark<Trie<Fixed>>(input_file, query_file, result_file);
-    benchmark<Trie<HashMap>>(input_file, query_file, result_file);
+
     return 1;
 }
