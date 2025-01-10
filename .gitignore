@@ -4,5 +4,7 @@ build/
 test.ft.txt
 bible.txt
 *queries*.txt
-*result*.txt
+*result*
+random_words.txt
 words.txt
+

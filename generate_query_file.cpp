@@ -3,8 +3,10 @@
 
 void generateQueryFile(const std::string &filename)
 {
+    size_t num_queries = 1e7;
+    size_t word_count = 0;
     std::string query_filename = "queries_" + filename;
-    std::ofstream qfile(query_filename);
+    std::ofstream qfile(query_filename, std::ios_base::app);
     std::ifstream file(filename);
 
     if (!file)
@@ -17,17 +19,15 @@ void generateQueryFile(const std::string &filename)
 
     std::string operations[3] = {"i", "c", "d"};
 
-    while (file >> word)
+    while (file >> word && num_queries--)
     {
-        if (rand() % 10 > -1)
-        {
-            if (word.back() != '\0')
-                word += '\0';
+        if (word.back() != '\0')
+            word += '\0';
 
-            qfile << word << " " << operations[rand() % 3] << "\n";
-        }
+        qfile << word << " " << operations[rand() % 3] << "\n";
+        ++word_count;
     }
-
+    std::cerr << "Number of queries: " << word_count << "\n"; 
     file.close();
 }
 
