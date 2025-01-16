@@ -7,6 +7,9 @@
 
 std::string csv_file;
 
+std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
+unsigned HashMapGlobal::id_counter;
+
 template <typename SDict>
 void processQueries(SDict &trie, const std::string &queryFile, const std::string &resultFile)
 {
@@ -59,12 +62,14 @@ void benchmark(const std::string &inputFile, const std::string &queryFile, const
 
     std::chrono::_V2::steady_clock::time_point b, e;
     int64_t c_dur, q_dur;
+    size_t tcm;
     {
         // construct
         b = std::chrono::steady_clock::now();
         auto trie = readFileIntoDict<Trie<NodeType>>(inputFile);
         e = std::chrono::steady_clock::now();
         c_dur = std::chrono::duration_cast<std::chrono::milliseconds>(e - b).count();
+        tcm = malloc_count_peak() / (1024 * 1024);
 
         // query
         b = std::chrono::steady_clock::now();
@@ -73,7 +78,6 @@ void benchmark(const std::string &inputFile, const std::string &queryFile, const
         q_dur = std::chrono::duration_cast<std::chrono::milliseconds>(e - b).count();
     }
     // output
-    auto tcm = malloc_count_peak() / (1024 * 1024);
     std::cout << "RESULT name=fahri_taban trie_construction_time=" << c_dur
               << " trie_construction_memory=" << tcm
               << " query_time=" << q_dur << "\n";
@@ -84,7 +88,6 @@ void benchmark(const std::string &inputFile, const std::string &queryFile, const
     csv.close();
 
     std::cerr << "Query results written to " << resultFile << "\n\n";
-
 }
 
 int main(int argc, char **argv)
@@ -104,6 +107,7 @@ int main(int argc, char **argv)
 
     if (argc != 4)
     {
+        benchmark<HashMapGlobal>(input_file, query_file, result_file);
         benchmark<Fixed>(input_file, query_file, result_file);
         benchmark<Variable>(input_file, query_file, result_file);
         benchmark<HashMap>(input_file, query_file, result_file);
@@ -117,10 +121,12 @@ int main(int argc, char **argv)
             benchmark<Fixed>(input_file, query_file, result_file);
         else if (type == "Variable")
             benchmark<Variable>(input_file, query_file, result_file);
-        else if (type == "HashMap")
-            benchmark<HashMap>(input_file, query_file, result_file);
         else if (type == "VariableSIMD")
             benchmark<VariableSIMD>(input_file, query_file, result_file);
+        else if (type == "HashMap")
+            benchmark<HashMap>(input_file, query_file, result_file);
+        else if (type == "HashMapGlobal")
+            benchmark<HashMapGlobal>(input_file, query_file, result_file);
     }
 
     return 1;

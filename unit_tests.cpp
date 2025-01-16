@@ -16,6 +16,9 @@
 #include "trie.h"
 #include "util.h"
 
+std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
+unsigned HashMapGlobal::id_counter;
+
 const std::string file = "/usr/share/dict/words";
 
 TEST_CASE("Read file into dict"){
@@ -86,7 +89,12 @@ TEST_CASE("VariableSIMD")
     test_trie<VariableSIMD>();
 }
 
-TEST_CASE("Hash")
+TEST_CASE("HashMap")
 {
     test_trie<HashMap>();
+}
+
+TEST_CASE("HashMapGlobal")
+{
+    test_trie<HashMapGlobal>();
 }

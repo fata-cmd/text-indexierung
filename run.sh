@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Array of types
-types=("Variable" "HashMap" "VariableSIMD")
+types=("Fixed" "Variable" "VariableSIMD" "HashMap" "HashMapGlobal")
 
 # First argument as the words file
 words_file=$1
