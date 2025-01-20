@@ -5,9 +5,7 @@
 #include "immintrin.h"
 #include "util.h"
 
-constexpr u_char null_byte = '\0';
 
-// debug
 class Fixed
 {
 protected:
@@ -29,7 +27,7 @@ public:
     bool contains(const u_char *c) const
     {
         const bool found = vec[*c] != nullptr;
-        if (*c == null_byte || !found)
+        if (*c == sentinel || !found)
             return found;
         return vec[*c]->contains(++c);
     }
@@ -38,7 +36,7 @@ public:
     {
         if (vec[*c] != nullptr)
         {
-            if (*c == null_byte)
+            if (*c == sentinel)
             {
                 vec[*c] = nullptr;
                 return true;
@@ -52,12 +50,12 @@ public:
     {
         if (vec[*c] != nullptr)
         {
-            if (*c == null_byte)
+            if (*c == sentinel)
                 return false;
         }
         else
         {
-            if (*c == null_byte)
+            if (*c == sentinel)
             {
                 vec[*c] = this;
                 return true;
@@ -90,7 +88,7 @@ protected:
     void insert_node(const u_char c)
     {
         chars.emplace_back(c);
-        ptrs.emplace_back(c != null_byte ? new Variable() : nullptr);
+        ptrs.emplace_back(c != sentinel ? new Variable() : nullptr);
     }
 
     void delete_node(const unsigned pos)
@@ -120,7 +118,7 @@ public:
     {
         const auto pos = find(*c);
         const bool found = pos != invalid_pos;
-        if (*c == null_byte || !found)
+        if (*c == sentinel || !found)
             return found;
         return ptrs[pos]->contains(++c);
     }
@@ -128,7 +126,7 @@ public:
     bool delete_word(const u_char *c)
     {
         const auto pos = find(*c);
-        if (*c == null_byte)
+        if (*c == sentinel)
         {
             if (pos != invalid_pos)
             {
@@ -148,14 +146,14 @@ public:
         if (pos == invalid_pos)
         {
             insert_node(*c);
-            if (*c == null_byte)
+            if (*c == sentinel)
                 return true;
             else
                 pos = ptrs.size() - 1U;
         }
         else
         {
-            if (*c == null_byte)
+            if (*c == sentinel)
                 return false;
         }
         return ptrs[pos]->insert_word(++c);
@@ -243,7 +241,7 @@ public:
     {
         auto it = map.find(*c);
         const bool found = it != map.end();
-        if (*c == null_byte || !found)
+        if (*c == sentinel || !found)
             return found;
         return it->second->contains(++c);
     }
@@ -252,7 +250,7 @@ public:
     {
         auto it = map.find(*c);
         const bool found = it != map.end();
-        if (*c == null_byte)
+        if (*c == sentinel)
         {
             if (found)
             {
@@ -270,8 +268,8 @@ public:
 
     bool insert_word(const u_char *c)
     {
-        auto [it, inserted] = map.emplace(*c, *c != null_byte ? new HashMap() : nullptr);
-        if (*c == null_byte)
+        auto [it, inserted] = map.emplace(*c, *c != sentinel ? new HashMap() : nullptr);
+        if (*c == sentinel)
         {
             return inserted;
         }
@@ -302,7 +300,7 @@ public:
     {
         for (const auto c : chars)
         {
-            if (c != null_byte)
+            if (c != sentinel)
             {
                 auto it = map.find(key(c));
                 if (it != map.end())
@@ -317,7 +315,7 @@ public:
     {
         auto it = map.find(key(*c));
         const bool found = it != map.end();
-        if (*c == null_byte || !found)
+        if (*c == sentinel || !found)
             return found;
         return it->second->contains(++c);
     }
@@ -326,7 +324,7 @@ public:
     {
         auto it = map.find(key(*c));
         const bool found = it != map.end();
-        if (*c == null_byte)
+        if (*c == sentinel)
         {
             if (found)
             {
@@ -346,12 +344,12 @@ public:
 
     bool insert_word(const u_char *c)
     {
-        auto [it, inserted] = map.emplace(key(*c), *c != null_byte ? new HashMapGlobal() : nullptr);
+        auto [it, inserted] = map.emplace(key(*c), *c != sentinel ? new HashMapGlobal() : nullptr);
         if (inserted)
         {
             chars.push_back(*c);
         }
-        if (*c == null_byte)
+        if (*c == sentinel)
         {
             return inserted;
         }

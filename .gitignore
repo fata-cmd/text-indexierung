@@ -1,4 +1,5 @@
 .vscode/
+eingabe.txt
 main
 build/
 test.ft.txt

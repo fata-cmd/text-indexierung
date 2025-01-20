@@ -13,6 +13,8 @@
 #include <memory>
 #endif
 
+constexpr u_char sentinel = '$';
+
 template <typename T>
 std::string type_name() {
 #ifdef __GNUG__
@@ -64,8 +66,8 @@ auto readFileIntoDict(const std::string &filename)
 
     while (file >> word)
     {
-        if (word.back() != '\0')
-            word += '\0';
+        if (word.back() != sentinel)
+            word += sentinel;
         dict.insert_word(word);
     }
 

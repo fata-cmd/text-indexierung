@@ -4,6 +4,7 @@
 #include <chrono>
 #include "malloc_count.h"
 #include <filesystem>
+#include <sstream>
 
 std::string csv_file;
 
@@ -15,7 +16,8 @@ void processQueries(SDict &trie, const std::string &queryFile, const std::string
 {
     std::ifstream queryStream(queryFile);
     std::ofstream resultStream(resultFile);
-    std::string line;
+    std::string word;
+    char op;
 
     if (!queryStream.is_open() || !resultStream.is_open())
     {
@@ -23,15 +25,12 @@ void processQueries(SDict &trie, const std::string &queryFile, const std::string
         return;
     }
 
-    while (std::getline(queryStream, line))
+    while (queryStream >> word)
     {
-        size_t spaceIndex = line.find('$');
-
-        std::string word = line.substr(0, spaceIndex);
-        char operation = line.back();
+        queryStream >> op;
         bool result = false;
 
-        switch (operation)
+        switch (op)
         {
         case 'i':
             result = trie.insert_word(word);
