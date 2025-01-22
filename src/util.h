@@ -25,7 +25,7 @@ std::string type_name() {
     };
     return (status == 0) ? res.get() : typeid(T).name();
 #else
-    return typeid(T).name(); // For MSVC or other compilers
+    return "";
 #endif
 }
 
@@ -43,7 +43,8 @@ auto readFileIntoSet(const std::string &filename)
 
     while (file >> word)
     {
-        word += '\0';
+        if (word.back() != sentinel)
+            word += sentinel;
         processedWords.emplace(word);
     }
 

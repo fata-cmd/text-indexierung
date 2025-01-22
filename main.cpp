@@ -1,8 +1,8 @@
-#include "trie.h"
+#include "src/trie.h"
 #include <iostream>
-#include "util.h"
+#include "src/util.h"
 #include <chrono>
-#include "malloc_count.h"
+#include "src/malloc_count.h"
 #include <filesystem>
 #include <sstream>
 

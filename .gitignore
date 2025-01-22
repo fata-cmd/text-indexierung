@@ -1,11 +1,5 @@
 .vscode/
-eingabe.txt
-main
 build/
-test.ft.txt
-bible.txt
-*queries*.txt
-*result*
-random_words.txt
-words.txt
+results/
+resources/
 
