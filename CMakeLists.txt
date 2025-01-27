@@ -39,16 +39,9 @@ target_link_libraries(MallocCount PUBLIC dl)
 
 add_executable(main main.cpp)
 
-add_executable(fixed fixed.cpp)
-add_executable(variable variable.cpp)
-add_executable(hashmap hashmap.cpp)
-
 add_executable(tests src/tests.cpp)
 add_executable(gen generate_query_file.cpp)
 
 target_link_libraries(main PUBLIC MallocCount)
-target_link_libraries(fixed PUBLIC MallocCount)
-target_link_libraries(variable PUBLIC MallocCount)
-target_link_libraries(hashmap PUBLIC MallocCount)
 
 add_test(NAME Tests COMMAND "tests")

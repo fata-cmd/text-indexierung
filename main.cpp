@@ -91,45 +91,32 @@ void benchmark(const std::string &inputFile, const std::string &queryFile, const
 
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 4)
     {
-        std::cerr << "Usage: <path_to_input_file> <path_to_query_file>\n";
+        std::cerr << "Usage: -variante=<1-3> <path_to_input_file> <path_to_query_file>\n";
         return 1;
     }
 
-    std::cerr << std::filesystem::current_path() << "\n";
-    std::string input_file = std::filesystem::absolute(argv[1]).string();
-    std::string query_file = std::filesystem::absolute(argv[2]).string();
-    std::filesystem::path input_path = std::filesystem::absolute(argv[1]);
+    std::cerr << "cwd: " << std::filesystem::current_path() << "\n";
+    std::string input_file = std::filesystem::absolute(argv[2]).string();
+    std::string query_file = std::filesystem::absolute(argv[3]).string();
+    std::filesystem::path input_path = std::filesystem::absolute(argv[2]);
     std::string result_file = (std::filesystem::current_path() / ("result_" + input_path.filename().string())).string();
 
     csv_file = result_file;
     csv_file.erase(csv_file.find_last_of('.'));
     csv_file += ".csv";
 
-    if (argc != 4)
-    {
+    std::string type = argv[1];
+    std::cerr << "Received type: " << type.back() << "\n";
+    if (type.back() == '1')
         benchmark<Fixed>(input_file, query_file, result_file);
-        // benchmark<Variable>(input_file, query_file, result_file);
+    else if (type.back() == '2')
         benchmark<VariableSIMD>(input_file, query_file, result_file);
-        // benchmark<HashMap>(input_file, query_file, result_file);
+    else if (type.back() == '3')
         benchmark<HashMapGlobal>(input_file, query_file, result_file);
-    }
     else
-    {
-        std::string type = argv[3];
-        std::cerr << "Received type: " << type << "\n";
-        if (type == "Fixed")
-            benchmark<Fixed>(input_file, query_file, result_file);
-        else if (type == "Variable")
-            benchmark<Variable>(input_file, query_file, result_file);
-        else if (type == "VariableSIMD")
-            benchmark<VariableSIMD>(input_file, query_file, result_file);
-        else if (type == "HashMap")
-            benchmark<HashMap>(input_file, query_file, result_file);
-        else if (type == "HashMapGlobal")
-            benchmark<HashMapGlobal>(input_file, query_file, result_file);
-    }
+        std::cerr << "Invalid type: " << type.back() << "\n";
 
     return 1;
 }
