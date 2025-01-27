@@ -280,13 +280,13 @@ class HashMapGlobal
 
 private:
     static std::unordered_map<key_t, HashMapGlobal *> map;
-    static u_int64_t id_counter;
-    uint64_t id;
+    static key_t id_counter;
+    key_t id;
     std::vector<u_char> chars;
 
     key_t key(const u_char c) const
     {
-        return (static_cast<key_t>(id) << 8) | c;
+        return (id << 8) | c;
     }
 
 public:
