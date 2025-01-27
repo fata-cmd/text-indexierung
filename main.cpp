@@ -106,11 +106,11 @@ int main(int argc, char **argv)
 
     if (argc != 4)
     {
-        benchmark<HashMapGlobal>(input_file, query_file, result_file);
         benchmark<Fixed>(input_file, query_file, result_file);
-        benchmark<Variable>(input_file, query_file, result_file);
-        benchmark<HashMap>(input_file, query_file, result_file);
+        //benchmark<Variable>(input_file, query_file, result_file);
         benchmark<VariableSIMD>(input_file, query_file, result_file);
+        //benchmark<HashMap>(input_file, query_file, result_file);
+        benchmark<HashMapGlobal>(input_file, query_file, result_file);
     }
     else
     {

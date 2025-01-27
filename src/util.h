@@ -13,8 +13,9 @@
 #include <memory>
 #endif
 
-constexpr u_char sentinel = '$';
+constexpr u_char sentinel = '\0';
 
+// return a type name as a string
 template <typename T>
 std::string type_name() {
 #ifdef __GNUG__

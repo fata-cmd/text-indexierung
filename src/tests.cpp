@@ -19,7 +19,7 @@
 std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
 unsigned HashMapGlobal::id_counter;
 
-const std::string file = "/usr/share/dict/words";
+const std::string file = "../resources/words.txt";
 
 TEST_CASE("Read file into dict"){
     auto dict = readFileIntoDict<Trie<VariableSIMD>>(file);

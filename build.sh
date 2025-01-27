@@ -12,5 +12,6 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=$1 -S .. -B .
 
 cmake --build . -j4
+ctest .
 # Return to the original directory
 cd ..

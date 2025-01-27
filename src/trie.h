@@ -178,19 +178,15 @@ private:
         __m256i target_vec = _mm256_set1_epi8(target);
 
         size_t i = 0;
-        // Iterate over the vector in chunks of 32 elements (since AVX2 processes 32 bytes at a time)
+
         for (; i + simd_width <= s; i += simd_width)
         {
-            // Load 32 bytes of data from the vector into the AVX2 register
             __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(&chars[i]));
 
-            // Compare the chunk with the target character
             __m256i cmp = _mm256_cmpeq_epi8(chunk, target_vec);
 
-            // Create a bitmask where each bit corresponds to a comparison result (1 if equal, 0 if not)
             int mask = _mm256_movemask_epi8(cmp);
 
-            // If there is a match, report the position(s)
             if (mask)
             {
                 size_t pos = i + std::__countr_zero(mask);
@@ -198,6 +194,7 @@ private:
                 return pos;
             }
         }
+        
         for (; i < s; i++)
         {
             if (chars[i] == target)
