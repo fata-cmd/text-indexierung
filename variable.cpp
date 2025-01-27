@@ -107,29 +107,7 @@ int main(int argc, char **argv)
     csv_file.erase(csv_file.find_last_of('.'));
     csv_file += ".csv";
 
-    if (argc != 4)
-    {
-        benchmark<Fixed>(input_file, query_file, result_file);
-        // benchmark<Variable>(input_file, query_file, result_file);
-        benchmark<VariableSIMD>(input_file, query_file, result_file);
-        // benchmark<HashMap>(input_file, query_file, result_file);
-        benchmark<HashMapGlobal>(input_file, query_file, result_file);
-    }
-    else
-    {
-        std::string type = argv[3];
-        std::cerr << "Received type: " << type << "\n";
-        if (type == "Fixed")
-            benchmark<Fixed>(input_file, query_file, result_file);
-        else if (type == "Variable")
-            benchmark<Variable>(input_file, query_file, result_file);
-        else if (type == "VariableSIMD")
-            benchmark<VariableSIMD>(input_file, query_file, result_file);
-        else if (type == "HashMap")
-            benchmark<HashMap>(input_file, query_file, result_file);
-        else if (type == "HashMapGlobal")
-            benchmark<HashMapGlobal>(input_file, query_file, result_file);
-    }
+    benchmark<VariableSIMD>(input_file, query_file, result_file);
 
     return 1;
 }

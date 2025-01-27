@@ -1,5 +1,6 @@
 .vscode/
 build/
 results/
+result_*
 resources/
 
