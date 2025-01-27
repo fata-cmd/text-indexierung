@@ -17,7 +17,7 @@
 #include "util.h"
 
 std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
-unsigned HashMapGlobal::id_counter;
+HashMapGlobal::key_t HashMapGlobal::id_counter;
 
 const std::string file = "../resources/words.txt";
 

@@ -9,7 +9,7 @@
 std::string csv_file;
 
 std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
-unsigned HashMapGlobal::id_counter;
+HashMapGlobal::key_t HashMapGlobal::id_counter;
 
 template <typename SDict>
 void processQueries(SDict &trie, const std::string &queryFile, const std::string &resultFile)
