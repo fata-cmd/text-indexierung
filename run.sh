@@ -6,7 +6,7 @@ input_dir="./resources/input"
 queries_dir="./resources/queries"
 output_dir="./resources/output"
 
-num_reps=10
+num_reps=3
 file_count=$(find "$input_dir" -maxdepth 1 -type f | wc -l)
 num_types=${#types[@]}
 
@@ -21,7 +21,7 @@ for words_file in "$input_dir"/*; do
       echo "$words_file not found"
       continue
   fi
-
+  echo "Processing: $words_file"	
   filename=$(basename "$words_file")
 
   # Loop through each type and process with the build/main command

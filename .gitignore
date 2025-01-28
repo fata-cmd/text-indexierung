@@ -5,4 +5,5 @@ result_*
 *.zip
 *.txt
 !CMakeLists.txt
+!resources/output/*.txt
 maildir/

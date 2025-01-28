@@ -5,6 +5,7 @@
 #include <vector>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <filesystem>
 #include <typeinfo>
