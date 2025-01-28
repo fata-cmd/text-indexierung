@@ -1,0 +1,15 @@
+Fixed,104,143,110
+Fixed,104,143,108
+Fixed,103,143,116
+Variable,78,4,104
+Variable,79,4,105
+Variable,77,4,103
+VariableSIMD,79,4,107
+VariableSIMD,78,4,104
+VariableSIMD,79,4,112
+HashMap,291,204,249
+HashMap,289,204,238
+HashMap,295,204,232
+HashMapGlobal,337,115,309
+HashMapGlobal,347,115,295
+HashMapGlobal,339,115,287
