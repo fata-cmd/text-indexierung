@@ -2,7 +2,6 @@
 build/
 results/
 result_*
-resources/
 *.zip
 *.txt
 !CMakeLists.txt
