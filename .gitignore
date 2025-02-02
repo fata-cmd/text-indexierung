@@ -5,5 +5,6 @@ result_*
 *.zip
 *.txt
 !CMakeLists.txt
-!resources/output*/*.txt
+!resources/output/*.txt
+!resources/output_old/*.txt
 maildir/
