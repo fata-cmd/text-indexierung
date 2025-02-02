@@ -19,7 +19,7 @@
 std::unordered_map<HashMapGlobal::key_t, HashMapGlobal *> HashMapGlobal::map;
 HashMapGlobal::key_t HashMapGlobal::id_counter;
 
-const std::string file = "../resources/words.txt";
+const std::string file = "/home/fata/repos/text_indexierung/resources/input/words.txt";
 
 TEST_CASE("Read file into dict")
 {

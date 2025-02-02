@@ -179,7 +179,7 @@ private:
 
         size_t i = 0;
 
-        for (; i + simd_width <= s; i += simd_width)
+        for (; i <= s; i += simd_width)
         {
             __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(&chars[i]));
 
@@ -190,19 +190,10 @@ private:
             if (mask)
             {
                 size_t pos = i + std::__countr_zero(mask);
-                assert((chars[pos] == target));
-                return pos;
+                return pos < s ? pos : invalid_pos;
             }
         }
         
-        for (; i < s; i++)
-        {
-            if (chars[i] == target)
-            {
-                return i;
-            }
-        }
-
         return invalid_pos;
     }
 

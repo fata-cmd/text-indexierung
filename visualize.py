@@ -1,52 +1,43 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import numpy as np
 
-# Define the column names
-column_names = ['Type', 'Tree Construction Time', 'Tree Construction Memory', 'Query Time']
+# Define column names
+column_names = ['File', 'Type', 'Tree Construction Time', 'Tree Construction Memory', 'Query Time']
 
-# Read the CSV file without headers, and assign column names manually
-df = pd.read_csv(sys.argv[1], header=None, names=column_names)
+# Read the CSV file
+csv_file = sys.argv[1]  # Take file path as command-line argument
+df = pd.read_csv(csv_file, header=None, names=column_names)
 
-# Group by 'Type' and calculate the mean for each metric
-df_avg = df.groupby('Type').mean()
+# Group by 'File' and 'Type', then calculate the mean for each metric
+df_avg = df.groupby(['File', 'Type']).mean().reset_index()
 
-# Reshape the data to match the desired format
-df_avg = df_avg.T  # Transpose the dataframe so that metrics are on the x-axis
+# Get unique files and attributes
+files = df_avg['File'].unique()
+attributes = ['Tree Construction Time', 'Tree Construction Memory', 'Query Time']
 
-# Plotting the data
-fig, ax = plt.subplots(figsize=(10, 6))
+# Generate a plot for each file and each metric
+for file in files:
+    df_file = df_avg[df_avg['File'] == file]  # Filter data for the specific file
 
-# Define the width of each bar and the positions for each group
-bar_width = 0.2  # Width of each bar
-positions = range(len(df_avg))  # Position of bars on x-axis
+    for attribute in attributes:
+        fig, ax = plt.subplots(figsize=(8, 5))
 
-# Create bars for each type in a grouped manner
-types = df_avg.columns  # Get types (Fixed, Variable, HashMap, VariableSIMD)
+        # Extract data for plotting
+        types = df_file['Type'].unique()  # Different types (e.g., Fixed, Variable)
+        values = [df_file[df_file['Type'] == type_name][attribute].values[0] for type_name in types]
 
-# Create bars for each type, each type's bars will be placed next to each other
-for i, type_name in enumerate(types):
-    ax.bar(
-        [pos + i * bar_width for pos in positions],  # Adjust position for each type
-        df_avg[type_name],  # Values for each type
-        width=bar_width,  # Set the width of bars
-        label=type_name  # Label for the legend
-    )
+        # Create a bar plot
+        ax.bar(types, values, color=['blue', 'green', 'red', 'orange', 'grey'])
 
-# Adjust the x-axis labels to represent the metrics
-ax.set_xticks([pos + bar_width * (len(types) - 1) / 2 for pos in positions])
-ax.set_xticklabels(df_avg.index)  # Set the labels as the metrics names
+        # Set labels and title
+        plt.title(f'{file}', fontsize=14)
+        plt.xlabel('Type', fontsize=12)
+        plt.ylabel(attribute, fontsize=12)
+        plt.xticks(rotation=20, ha='right')
 
-# Adding titles and labels
-plt.title('Average Performance Metrics for Different Tree Types', fontsize=16)
-plt.xlabel('Metrics', fontsize=12)
-plt.ylabel('Average Values', fontsize=12)
-plt.xticks(rotation=0)  # Keep x-axis labels horizontal
-plt.legend(title="Type", bbox_to_anchor=(1.05, 1), loc='upper left')
-
-# Display the plot
-plt.tight_layout()
-plt.show()
-
-# Display the averaged data in the console
-print(df_avg)
+        # Save and display the plot
+        plt.tight_layout()
+        filename = f"./resources/visualizations/{file}_{attribute.replace(' ', '_')}.png"
+        plt.savefig(filename, dpi=300)
