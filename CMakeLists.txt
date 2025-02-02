@@ -41,6 +41,7 @@ add_executable(main main.cpp)
 
 add_executable(tests src/tests.cpp)
 add_executable(gen generate_query_file.cpp)
+add_executable(stats stats.cpp)
 
 target_link_libraries(main PUBLIC MallocCount)
 

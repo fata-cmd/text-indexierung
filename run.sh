@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CORE="0,1,2,3"
+
 # Array of types
 types=("1" "2" "3" "4" "5")
 input_dir="./resources/input"
@@ -23,6 +25,11 @@ for words_file in "$input_dir"/*; do
   fi
   echo "Processing: $words_file"	
   filename=$(basename "$words_file")
+  output_file="${output_dir}/${filename}"
+
+  if [ ! -f "${output_file}" ]; then
+    touch "${output_file}"
+  fi
 
   # Loop through each type and process with the build/main command
   for type in "${types[@]}"; do
@@ -33,7 +40,7 @@ for words_file in "$input_dir"/*; do
       query_file="${queries_dir}/${filename}"
     
       # Execute the command with the given words file and constructed query file
-      ./build/main "$type" "$words_file" "$query_file" >> "${output_dir}/${filename}"
+      taskset -c $CORE sudo chrt -f 99 ./build/main "$type" "$words_file" "$query_file" >> "${output_file}"
       
     
       # Clear the cache

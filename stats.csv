@@ -1,0 +1,6 @@
+Filename, Total words, Unique words, Avg word length, Median word length
+words,104334,104334,8.44,8
+bible,824036,34039,4.24738,4
+enwik8,15118595,415458,4.87368,4
+enwik9,152585611,2147450,4.72269,4
+enron,226685241,1862756,4.61177,4
