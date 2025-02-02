@@ -177,9 +177,7 @@ private:
 
         __m256i target_vec = _mm256_set1_epi8(target);
 
-        size_t i = 0;
-
-        for (; i <= s; i += simd_width)
+        for (size_t i = 0; i < s; i += simd_width)
         {
             __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(&chars[i]));
 
